@@ -1,0 +1,63 @@
+class Solution {
+    Map<Integer , ArrayList<Integer>> adj = new HashMap<>();
+    Map<Integer , Integer> bobTime = new HashMap<>();
+    int maxAlice = Integer.MIN_VALUE;
+    public boolean dfsBob(int curr , int time , boolean[] visited) {
+        visited[curr] = true;
+        bobTime.put(curr , time);
+
+        if(curr == 0)
+          return true;
+
+        for(int i : adj.get(curr)) {
+            if(!visited[i]) {
+                if(dfsBob(i , time + 1 , visited))
+                   return true;
+            }
+        }
+        visited[curr] = false;
+        bobTime.remove(curr);
+        return false;
+    }
+
+    public void dfsAlice(int curr , int time , int income , int[] amount , boolean[] visited) {
+        visited[curr] = true;
+
+        if(!bobTime.containsKey(curr) || bobTime.get(curr) > time) {
+            income += amount[curr];
+        }
+        else if(bobTime.get(curr) == time) {
+            income += amount[curr] / 2;
+        }
+
+        if(adj.get(curr).size() == 1 && curr != 0)
+           maxAlice = Math.max(maxAlice , income);
+
+        for(int i : adj.get(curr)) {
+            if(!visited[i]) {
+                dfsAlice(i , time + 1 , income , amount , visited);
+            }
+        }
+    }
+    public int mostProfitablePath(int[][] edges, int bob, int[] amount) {
+        int n = amount.length;
+        for(int edge[] : edges) {
+            int i = edge[0];
+            int j = edge[1];
+
+            adj.computeIfAbsent(i , k -> new ArrayList<>()).add(j);
+            adj.computeIfAbsent(j , k -> new ArrayList<>()).add(i);
+        }
+        
+        boolean visited[] = new boolean[n];
+        int time = 0;
+        dfsBob(bob , time , visited);
+
+        Arrays.fill(visited , false);
+        int income = 0;
+        time = 0;
+        dfsAlice(0 , 0 , income , amount , visited);
+
+        return maxAlice;
+    }
+}
